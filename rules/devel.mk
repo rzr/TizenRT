@@ -53,12 +53,13 @@ sudo?=sudo
 export sudo
 
 # Overload external dep to be pulled
-#TODO: upstream neededchanges and set to master or released
+#TODO: upstream needed changes and set to master or released
 #iotjs_url=https://github.com/rzr/iotjs
 #iotjs_branch=master
-iotjs_url=https://github.com/tizenteam/iotjs
-iotjs_branch=sandbox/rzr/tizen/rt/master
+#iotjs_url=https://github.com/tizenteam/iotjs
+#iotjs_branch=sandbox/rzr/tizen/rt/master
 #iotjs_url=file://${HOME}/mnt/iotjs
+#iotjs_branch=sandbox/rzr/tizen/rt/devel/master
 
 include rules/iotjs/rules.mk
 
@@ -69,42 +70,59 @@ base_image_type=minimal
 
 prep_files+=${private_dir}/config.js
 prep_files+=external/iotjs/profiles/default.profile
-#prep_files+=external/iotjs/Kconfig.runtime
 prep_files+=external/iotjs.Kconfig
 contents_dir?=tools/fs/contents
 
 js_minifier?=slimit
 #js_minifier?=yui-compressor
 
+#TODO:
+#iotjs_modules_url=https://github.com/rzr/iotjs_modules
+#iotjs_modules_branch?=master
+#iotjs_modules_dir=external/iotjs_modules
 
-${contents_dir}:
-	mkdir -p $@
+demo_url=https://github.com/rzr/air-lpwan-demo
+demo_branch=sandbox/rzr/devel/master
+demo_dir?=${iotjs_modules_dir}/air-lpwan-demo
 
-iotjs_modules_url=https://github.com/tizenteam/iotjs
-iotjs_modules_branch?=sandbox/rzr/air-lpwan-demo/master
-demo_dir?=external/iotjs_modules/air-lpwan-demo
 private_dir?=${demo_dir}/private
-#demo_dir?=.
-
-${demo_dir}:
-	mkdir -p ${@D}
-	git clone -b ${iotjs_modules_branch} ${iotjs_modules_url} $@
-
-${demo_dir}/%: ${demo_dir}
-	ls $@
 
 prep_files+=${demo_dir}
 prep_files+=${demo_dir}/index.js
 
 
+${contents_dir}:
+	@mkdir -p $@
+
+${iotjs_modules_dir}:
+	@mkdir -p ${@}
+
+devel/${iotjs_modules_dir}:
+	mkdir -p ${@D}
+	git clone --recursive -b ${iotjs_modules_branch} ${iotjs_modules_url} $@
+
+${demo_dir}: ${iotjs_modules_dir}
+	ls $@ || git clone ${demo_url} -b ${demo_branch} $@
+
+${demo_dir}/%: ${demo_dir}
+	ls $@
+
 ${demo_dir}/private/config.js: ${demo_dir}/config.js
 	mkdir -p ${@D}
-	cp -av $< $@
+	ls $@ || cp -av $< $@
 
-devel/private:
+devel/private: ${demo_dir}
 	mkdir -p ${demo_dir}/private
 	rsync -avx ${HOME}/backup/${CURDIR}/${private_dir}/ ${private_dir}/ || echo "TODO"
 	ls ${private_dir} 
+
+devel/demo_dir:
+	rsync -avx ~/mnt/air-lpwan-demo/ ${demo_dir}/
+
+
+devel/iotjs_dir:
+	rsync -avx ~/mnt/iotjs/ ${iotjs_dir}
+
 
 private/rm:
 	rm -rf ${CURDIR}/${demo_dir}/private
@@ -116,6 +134,7 @@ contents: ${demo_dir} ${contents_dir}
 	mkdir -p ${contents_dir}/example/
 	rsync -avx ${demo_dir}/ ${contents_dir}/example/
 	rm -rf ${contents_dir}/example/.git*
+	rm -rf ${contents_dir}/example/*/.git*
 	@mkdir -p ${contents_dir}/iotjs/samples
 	rsync -avx external/iotjs/samples/ ${contents_dir}/iotjs/samples/
 	find ${contents_dir} -iname "*~" -exec rm {} \;
