@@ -129,7 +129,7 @@ devel/demo/import: ${demo_dir}
 devel/iotivity/import: apps/examples/iotivity_example/
 	rm -rf $</.git*
 	git add $<
-	git commit -am "WIP: import: $@"
+	git commit -am "WIP: import: $@" ||:
 
 devel/iotjs_dir: ${HOME}/mnt/iotjs
 	rsync -avx $</ ${iotjs_dir}
