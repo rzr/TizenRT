@@ -77,9 +77,9 @@ js_minifier?=slimit
 #js_minifier?=yui-compressor
 
 #TODO:
-#iotjs_modules_url=https://github.com/rzr/iotjs_modules
-#iotjs_modules_branch?=master
-#iotjs_modules_dir=external/iotjs_modules
+iotjs_modules_url=https://github.com/rzr/iotjs_modules
+iotjs_modules_branch?=master
+iotjs_modules_dir=external/iotjs_modules
 
 demo_url=https://github.com/rzr/air-lpwan-demo
 demo_branch=sandbox/rzr/devel/master
@@ -116,13 +116,26 @@ devel/private: ${demo_dir}
 	rsync -avx ${HOME}/backup/${CURDIR}/${private_dir}/ ${private_dir}/ || echo "TODO"
 	ls ${private_dir} 
 
-devel/demo_dir:
-	rsync -avx ~/mnt/air-lpwan-demo/ ${demo_dir}/
+devel/demo_dir: ${HOME}/mnt/air-lpwan-demo
+	rsync -avx $</ ${demo_dir}/
+	@rm -rf ${demo_dir}/.git*
 
+devel/demo/import: ${demo_dir}
+	rm -rf $</.git*
+	rm -rf $</*/.git*
+	git add $<
+	git commit -am "WIP: import: $@" ||:
 
-devel/iotjs_dir:
-	rsync -avx ~/mnt/iotjs/ ${iotjs_dir}
+devel/iotivity/import: apps/examples/iotivity_example/
+	rm -rf $</.git*
+	git add $<
+	git commit -am "WIP: import: $@"
 
+devel/iotjs_dir: ${HOME}/mnt/iotjs
+	rsync -avx $</ ${iotjs_dir}
+
+devel/import: devel/demo/import devel/iotivity/import
+	@echo "# $@: $^"
 
 private/rm:
 	rm -rf ${CURDIR}/${demo_dir}/private
@@ -159,10 +172,10 @@ external/artik-sdk:
 
 artik/import: external/artik-sdk
 
-iotjs/local:
+iotjs/local: ${HOME}/mnt/iotjs
 	-rm -f external/iotjs
 	rm -rf external/iotjs/
-	rsync -avx  --delete ~/mnt/iotjs/ external/iotjs/
+	rsync -avx  --delete $</ external/iotjs/
 	${make} iotjs/deps
 
 tizen_iotivity_example_url?=https://github.com/tizenteam/iotivity-example
@@ -177,19 +190,20 @@ tizen: local/iotivity-example-tizen
 
 iotivity_example_url?=https://github.com/tizenteam/iotivity-example
 iotivity_example_branch?=sandbox/rzr/tizen/rt/1.2-rel
-iotivity_example_prep_files?=apps/examples/iotivity_example/Kconfig
+iotivity_example_dir?=apps/examples/iotivity_example
+iotivity_example_prep_files?=${iotivity_example_dir}/Kconfig
 
-apps/examples/iotivity_example: 
+${iotivity_example_dir}:
 	mkdir -p ${@D}
 	git clone --recursive -b ${iotivity_example_branch} ${iotivity_example_url} $@
 	ls $@
 
-apps/examples/iotivity_example/%: apps/examples/iotivity_example
+${iotivity_example_dir}/%: ${iotivity_example_dir}
 	ls $@
 
 prep_files+=${iotivity_example_prep_files}
 
-local/apps/examples/iotivity_example: ${HOME}/mnt/iotivity-example/
+devel/iotivity_example_dir: ${HOME}/mnt/iotivity-example/
 	-rm $@
 	mkdir -p ${@}
 	rsync -avx $</ $@/
