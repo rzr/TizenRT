@@ -40,14 +40,14 @@ setup/%: /etc/os-release
 	@echo "TODO: Please install lsb package to guess your system"
 sudo?=sudo
 
-setup/debian: /etc/debian_version
+debian/setup: /etc/debian_version
 	${sudo} apt-get update -y
 	${sudo} apt-get install -y git gperf libncurses5-dev flex bison
 	${sudo} apt-get install -y openocd libusb-1.0
 	${sudo} apt-get install -y genromfs time curl
 	${sudo} apt-get install -y texinfo
 
-setup/ubuntu: setup/debian
+debian/ubuntu/setup: debian/setup
 	sync
 
 setup: /etc/os-release
