@@ -117,7 +117,7 @@ ${demo_dir}/private/config.js: ${demo_dir}/config.js
 devel/private: ${demo_dir}
 	mkdir -p ${demo_dir}/private
 	rsync -avx ${HOME}/backup/${CURDIR}/${private_dir}/ ${private_dir}/ || echo "TODO"
-	ls ${private_dir}
+	ls ${private_dir} 
 
 devel/demo_dir: ${HOME}/mnt/air-lpwan-demo
 	rsync -avx $</ ${demo_dir}/
@@ -241,9 +241,9 @@ demo: ${prep_files}
 #	grep STARTUP os/.config
 #	grep IOTJS os/.config
 #	grep NETCAT os/.config
-	grep 'BAUD=' os/.config
+	grep 'BAUD=' os/.config 
 	${make} -e contents deploy
-	${make} -e run
+	${make} -e run 
 #	${make} console/screen  # baudrate=57600
 #	sed -e 's|115200|57600|g' -i os/.config
 
@@ -285,7 +285,7 @@ ${configs_dir}/${machine}/devel/%:
 
 devel/commit: ${defconfig}
 	ls $<
-	git add $<
+	git add $< 
 	git add ${<D}/*.defs
 	git status \
   && git commit -sm "WIP: devel: (${machine})" ${<D} \
